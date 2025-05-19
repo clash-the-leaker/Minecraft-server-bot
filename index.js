@@ -1,15 +1,23 @@
-const { Client, GatewayIntentBits, Partials, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionType } = require('discord.js');
 require('dotenv').config();
+const { Client, GatewayIntentBits, Partials, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const express = require('express');
 
+// Create Discord client
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ],
   partials: [Partials.Channel]
 });
 
+// Bot ready event
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
+// Command handler
 client.on('messageCreate', async (message) => {
   if (message.content === '!togglestatus') {
     const embed = new EmbedBuilder()
@@ -28,14 +36,13 @@ client.on('messageCreate', async (message) => {
   }
 });
 
+// Button interaction handler
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isButton()) return;
 
   if (interaction.customId === 'toggle_server') {
     const embed = interaction.message.embeds[0];
     let isOn = embed.description.includes('**ON**');
-
-    // Toggle state
     isOn = !isOn;
 
     const newEmbed = new EmbedBuilder()
@@ -53,15 +60,12 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.update({ embeds: [newEmbed], components: [newRow] });
   }
 });
-const express = require('express');
+
+// Web server for Railway/uptime check
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
-app.listen(3000, () => console.log('Web server is running'));
-const http = require('http');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Web server is running on port ${PORT}`));
 
-setInterval(() => {
-  http.get('http://localhost:3000');  // Ping your own Express server internally
-}, 1* 60 * 1000); // every 1 minutes
-
+// Login to Discord
 client.login(process.env.BOT_TOKEN);
-
